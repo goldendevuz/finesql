@@ -1,31 +1,25 @@
+import os
 import sqlite3
 
 import pytest
 
-from fynor.orm import Database, Table, Column, ForeignKey
+from fynor.orm import Database
+
 
 @pytest.fixture
-def Author():
-    class Author(Table):
-        name = Column(str)
-        age = Column(int)
+def db():
+    DB_PATH = "./test.db"
+    if os.path.exists(DB_PATH):
+        os.remove(DB_PATH)
 
-    return Author
+    db = Database(DB_PATH)
+    return db
 
-@pytest.fixture
-def Book(Author):
-    class Book(Table):
-        title = Column(str)
-        published = Column(bool)
-        author = ForeignKey(Author)
 
-    return Book
-
-def test_create_db():
-    db = Database("./test.db")
-
+def test_create_db(db):
     assert isinstance(db.conn, sqlite3.Connection)
     assert db.tables == []
+
 
 def test_table_definition(Author, Book):
     assert Author.name.type == str
@@ -36,3 +30,14 @@ def test_table_definition(Author, Book):
     assert Book.title.sql_type == "TEXT"
     # TODO assert Book.published.sql_type == "ODOT"
     # TODO assert Book.author.sql_type == "ODOT"
+
+
+def test_table_creation(db, Author, Book):
+    db.create(Author)
+    db.create(Book)
+
+    assert Author._get_create_sql() == "CREATE TABLE IF NOT EXISTS author (id INTEGER PRIMARY KEY AUTOINCREMENT, age INTEGER, name TEXT);"
+    assert Book._get_create_sql() == "CREATE TABLE IF NOT EXISTS book (id INTEGER PRIMARY KEY AUTOINCREMENT, author_id INTEGER, published INTEGER, title TEXT);"
+
+    for table in ("author", "book"):
+        assert table in db.tables
