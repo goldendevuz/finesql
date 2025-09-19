@@ -2,18 +2,12 @@ import os
 import sqlite3
 
 import pytest
+from icecream import ic
 
 from fynor.orm import Database
 
 
-@pytest.fixture
-def db():
-    DB_PATH = "./test.db"
-    if os.path.exists(DB_PATH):
-        os.remove(DB_PATH)
 
-    db = Database(DB_PATH)
-    return db
 
 
 def test_create_db(db):
@@ -41,3 +35,15 @@ def test_table_creation(db, Author, Book):
 
     for table in ("author", "book"):
         assert table in db.tables
+
+def test_table_instance_creation(db, Author):
+    db.create(Author)
+
+    name = "John Doe"
+    age = 44
+    john = Author(name=name, age=age)
+
+    """"""
+    assert john.name == name
+    assert john.age == age
+    assert john.id is None

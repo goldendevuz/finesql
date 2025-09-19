@@ -1,6 +1,8 @@
+import os
+
 import pytest
 
-from fynor.orm import Table, Column, ForeignKey
+from fynor.orm import Table, Column, ForeignKey, Database
 
 
 @pytest.fixture
@@ -20,3 +22,12 @@ def Book(Author):
         author = ForeignKey(Author)
 
     return Book
+
+@pytest.fixture
+def db():
+    DB_PATH = "./test.db"
+    if os.path.exists(DB_PATH):
+        os.remove(DB_PATH)
+
+    db = Database(DB_PATH)
+    return db

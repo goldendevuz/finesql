@@ -28,6 +28,11 @@ class Database:
 
 
 class Table:
+    def __init__(self, **kwargs):
+        self._data = dict(kwargs)
+        self._data.update(id=None)
+        ic(self._data)
+
     @classmethod
     def _get_create_sql(cls):
         CREATE_SQL_TABLE = "CREATE TABLE IF NOT EXISTS {name} ({fields});"
@@ -46,6 +51,15 @@ class Table:
 
         query = CREATE_SQL_TABLE.format(name=name, fields=fields)
         return query
+
+    def __getattribute__(self, name):
+        _data = super().__getattribute__("_data")
+
+        if name in _data:
+            ic()
+            return _data[name]
+        return super().__getattribute__(name)
+
 
 
 class Column:
