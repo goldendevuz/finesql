@@ -43,7 +43,26 @@ def test_table_instance_creation(db, Author):
     age = 44
     john = Author(name=name, age=age)
 
-    """"""
     assert john.name == name
     assert john.age == age
     assert john.id is None
+
+    """"""
+
+def test_save_save_table_instance(db, Author):
+    db.create(Author)
+
+    name = "John Doe"
+    age = 44
+    john = Author(name=name, age=age)
+    db.save(john)
+
+    assert john._get_insert_sql() == (
+        "INSERT INTO author (age, name) VALUES (?, ?);",
+        [age, name],
+    )
+    assert john.id == 1
+
+    jack = Author(name='Jack Ma', age=55)
+    db.save(jack)
+    assert jack.id == 2
