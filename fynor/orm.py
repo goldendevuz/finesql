@@ -22,9 +22,7 @@ class Database:
         return [row[0] for row in self.conn.execute(SELECT_SQL_TABLES).fetchall()]
 
     def create(self, table):
-        ic()
         self.conn.execute(table._get_create_sql())
-        ic()
 
     def save(self, instance):
         sql, values = instance._get_insert_sql()
@@ -45,9 +43,10 @@ class Database:
 
 class Table:
     def __init__(self, **kwargs):
-        self._data = dict(kwargs)
-        self._data.update(id=None)
-        ic(self._data)
+        self._data = {"id": None}
+
+        for key, value in kwargs.items():
+            self._data[key] = value
 
     @classmethod
     def _get_create_sql(cls):
@@ -101,6 +100,12 @@ class Table:
             ic()
             return _data[name]
         return super().__getattribute__(name)
+
+    def __setattr__(self, name, value):
+        super().__setattr__(name, value)
+
+        if name in self._data:
+            self._data[name] = value
 
     @classmethod
     def _get_select_all_sql(cls):

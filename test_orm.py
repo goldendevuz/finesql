@@ -34,17 +34,17 @@ def test_table_creation(db, Author, Book):
         assert table in db.tables
 
 def test_table_instance_creation(db, Author):
+    ic(46000000000000000000000)
     db.create(Author)
 
     name = "John Doe"
     age = 44
     john = Author(name=name, age=age)
+    ic(46000000000000000000001)
 
     assert john.name == name
     assert john.age == age
     assert john.id is None
-
-    """"""
 
 def test_save_save_table_instance(db, Author):
     db.create(Author)
@@ -88,6 +88,7 @@ def test_query_all_authors(db, Author):
         assert isinstance(authors[id], Author)
         assert author.age in {44, 23}
         assert author.name in {"John Doe", "Jack Ma"}
+        assert author.id in {1, 2}
 
     jack = Author(name='Jack Ma', age=55)
     db.save(jack)
