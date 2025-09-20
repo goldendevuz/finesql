@@ -6,11 +6,11 @@ from icecream import ic
 
 from fynor.orm import Database
 
-def save_author(db, Author, name, age):
-    author = Author(name=name, age=age)
-    db.save(author)
+def save_obj(db, Table, **kwargs):
+    obj = Table(**kwargs)
+    db.save(obj)
 
-    return author
+    return obj
 
 
 def test_create_db(db):
@@ -73,8 +73,8 @@ def test_save_save_table_instance(db, Author):
 def test_query_all_authors(db, Author):
     db.create(Author)
 
-    john = save_author(db, Author, name="John Doe", age=44)
-    jack = save_author(db, Author, name="Jack Ma", age=23)
+    john = save_obj(db, Author, name="John Doe", age=44)
+    jack = save_obj(db, Author, name="Jack Ma", age=23)
 
     authors = db.all(Author)
 
@@ -96,7 +96,7 @@ def test_query_all_authors(db, Author):
 def test_gdt_author(db, Author):
     db.create(Author)
 
-    save_author(db, Author, name="John Doe", age=44)
+    save_obj(db, Author, name="John Doe", age=44)
 
     john = db.get(Author, id=1)
 
@@ -108,3 +108,36 @@ def test_gdt_author(db, Author):
     assert john.id == 1
     assert john.age == 44
     assert john.name == "John Doe"
+
+def test_get_book(db, Author, Book):
+    db.create(Author)
+    db.create(Book)
+
+    john = save_obj(db, Author, name="John Doe", age=44)
+    jack = save_obj(db, Author, name="Jack Ma", age=23)
+
+    book_1 = save_obj(db, Book, title="Atomic Habits", published=False, author=john)
+    book_2 = save_obj(db, Book, title="Show your work", published=True, author=jack)
+
+    book = db.get(Book, id=2)
+    
+    assert book.title == "Show your work"
+    assert book.id == 2
+    assert book.author.name == "Jack Ma"
+    assert book.author.age == 23
+
+
+def test_get_all_books(db, Author, Book):
+    db.create(Author)
+    db.create(Book)
+
+    john = save_obj(db, Author, name="John Doe", age=44)
+    jack = save_obj(db, Author, name="Jack Ma", age=23)
+
+    book_1 = save_obj(db, Book, title="Atomic Habits", published=False, author=john)
+    book_2 = save_obj(db, Book, title="Show your work", published=True, author=jack)
+
+    books = db.all(Book)
+
+    assert len(books) == 2
+    assert books[1].author.name == "Jack Ma"

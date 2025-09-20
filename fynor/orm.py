@@ -37,6 +37,10 @@ class Database:
         for row in self.conn.execute(query).fetchall():
             instance = table()
             for field, value in zip(fields, row):
+                if field.endswith("_id"):
+                    field = field[:-3]
+                    fk = getattr(table, field)
+                    value = self.get(fk.table, id=value)
                 setattr(instance, field, value)
             result.append(instance)
         return result
@@ -51,6 +55,10 @@ class Database:
 
         instance = table()
         for field, value in zip(fields, row):
+            if field.endswith("_id"):
+                field = field[:-3]
+                fk = getattr(table, field)
+                value = self.get(fk.table, id=value)
             setattr(instance, field, value)
 
         return instance
@@ -91,12 +99,13 @@ class Table:
         for name, col in inspect.getmembers(cls):
             def _():
                 placeholders.append("?")
-                fields.append(name)
 
             if isinstance(col, Column):
+                fields.append(name)
                 values.append(getattr(self, name))
                 _()
             elif isinstance(col, ForeignKey):
+                fields.append(f"{name}_id")
                 values.append(getattr(self, name).id)
                 _()
 
