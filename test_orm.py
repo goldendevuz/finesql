@@ -156,3 +156,14 @@ def test_update_author(db, Author):
 
     assert john.name == "John Wick"
     assert john.age == 43
+
+
+def test_delete_author(db, Author):
+    db.create(Author)
+
+    john = save_obj(db, Author, name="John Doe", age=23)
+
+    db.delete(Author, id=1)
+
+    with pytest.raises(Exception):
+        db.get(Author, id=1)
