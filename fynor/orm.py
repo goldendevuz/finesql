@@ -41,6 +41,20 @@ class Database:
             result.append(instance)
         return result
 
+    def get(self, table, id):
+        query, fields = table._get_select_by_id_sql(id=id)
+
+        row = self.conn.execute(query).fetchone()
+
+        if row is None:
+            raise Exception(f"{table.__name__} instance with id {id} does not exist")
+
+        instance = table()
+        for field, value in zip(fields, row):
+            setattr(instance, field, value)
+
+        return instance
+
 class Table:
     def __init__(self, **kwargs):
         self._data = {"id": None}
@@ -119,6 +133,20 @@ class Table:
                 fields.append(f"{name}_id")
 
         query = SELECT_ALL_QUERY.format(fields=", ".join(fields), name=cls.__name__.lower())
+        return query, fields
+
+    @classmethod
+    def _get_select_by_id_sql(cls, id):
+        SELECT_ALL_QUERY = "SELECT {fields} FROM {name} WHERE id={id};"
+
+        fields = ["id"]
+        for name, col in inspect.getmembers(cls):
+            if isinstance(col, Column):
+                fields.append(name)
+            elif isinstance(col, ForeignKey):
+                fields.append(f"{name}_id")
+
+        query = SELECT_ALL_QUERY.format(fields=", ".join(fields), name=cls.__name__.lower(), id=id)
         return query, fields
 
 class Column:

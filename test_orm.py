@@ -6,6 +6,12 @@ from icecream import ic
 
 from fynor.orm import Database
 
+def save_author(db, Author, name, age):
+    author = Author(name=name, age=age)
+    db.save(author)
+
+    return author
+
 
 def test_create_db(db):
     assert isinstance(db.conn, sqlite3.Connection)
@@ -67,14 +73,8 @@ def test_save_save_table_instance(db, Author):
 def test_query_all_authors(db, Author):
     db.create(Author)
 
-    def save_author(name, age):
-        author = Author(name=name, age=age)
-        db.save(author)
-
-        return author
-
-    john = save_author(name="John Doe", age=44)
-    jack = save_author(name="Jack Ma", age=23)
+    john = save_author(db, Author, name="John Doe", age=44)
+    jack = save_author(db, Author, name="Jack Ma", age=23)
 
     authors = db.all(Author)
 
@@ -92,3 +92,19 @@ def test_query_all_authors(db, Author):
 
     jack = Author(name='Jack Ma', age=55)
     db.save(jack)
+
+def test_gdt_author(db, Author):
+    db.create(Author)
+
+    save_author(db, Author, name="John Doe", age=44)
+
+    john = db.get(Author, id=1)
+
+    assert Author._get_select_by_id_sql(id=1) == (
+        "SELECT id, age, name FROM author WHERE id=1;",
+        ["id", "age", "name"],
+    )
+    assert isinstance(john, Author)
+    assert john.id == 1
+    assert john.age == 44
+    assert john.name == "John Doe"
