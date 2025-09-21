@@ -2,9 +2,7 @@ import os
 import sqlite3
 
 import pytest
-from icecream import ic
-
-from fynor.orm import Database
+from finesql.orm import Database
 
 def save_obj(db, Table, **kwargs):
     obj = Table(**kwargs)
@@ -40,13 +38,11 @@ def test_table_creation(db, Author, Book):
         assert table in db.tables
 
 def test_table_instance_creation(db, Author):
-    ic(46000000000000000000000)
     db.create(Author)
 
     name = "John Doe"
     age = 44
     john = Author(name=name, age=age)
-    ic(46000000000000000000001)
 
     assert john.name == name
     assert john.age == age

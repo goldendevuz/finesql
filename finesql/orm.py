@@ -1,8 +1,6 @@
 import inspect
 import sqlite3
 
-from icecream import ic
-
 SQL_TYPES = {
     int: 'INTEGER',
     float: 'REAL',
@@ -131,7 +129,6 @@ class Table:
         _data = super().__getattribute__("_data")
 
         if name in _data:
-            ic()
             return _data[name]
         return super().__getattribute__(name)
 

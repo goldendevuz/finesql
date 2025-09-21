@@ -2,7 +2,7 @@ import os
 
 import pytest
 
-from fynor.orm import Table, Column, ForeignKey, Database
+from finesql.orm import Table, Column, ForeignKey, Database
 
 
 @pytest.fixture
@@ -22,6 +22,7 @@ def Book(Author):
         author = ForeignKey(Author)
 
     return Book
+
 
 @pytest.fixture
 def db():

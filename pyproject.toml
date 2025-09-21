@@ -1,10 +1,37 @@
+[build-system]
+requires = ["setuptools>=61.0", "wheel"]
+build-backend = "setuptools.build_meta"
+
 [project]
-name = "fine-sql"
+name = "finesql"
 version = "0.1.0"
-description = "Add your description here"
+description = "FineSQL is a library for interacting with SQLite database from Python code, with Python objects."
 readme = "README.md"
-requires-python = ">=3.12"
-dependencies = [
-    "icecream>=2.1.8",
-    "pytest>=8.4.2",
+requires-python = ">=3.9"
+license = { text = "MIT" }
+authors = [
+    { name = "Abdelmajid Yunus", email = "goldendevuz@gmail.com" },
 ]
+keywords = ["web", "framework", "object", "sqlite", "orm"]
+
+dependencies = []
+
+[project.optional-dependencies]
+# Example: pip install finesql[dev]
+dev = [
+    "pytest==8.4.2",
+    "setuptools==80.9.0",
+    "twine==6.2.0",
+    "wheel==0.45.1",
+    "icecream==2.1.8",
+    "setuptools==80.9.0",
+    "build==1.3.0",
+]
+
+[project.urls]
+Homepage = "https://github.com/goldendevuz/finesql"
+Repository = "https://github.com/goldendevuz/finesql"
+Issues = "https://github.com/goldendevuz/finesql/issues"
+
+[tool.setuptools.packages.find]
+exclude = ["tests", "*.tests", "*.tests.*", "tests.*"]
