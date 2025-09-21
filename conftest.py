@@ -25,6 +25,16 @@ def Book(Author):
 
 
 @pytest.fixture
+def Hero():
+    class Hero(Table):
+        name = Column(str)
+        secret_name = Column(str)
+        age = Column(int)
+
+    return Hero
+
+
+@pytest.fixture
 def db():
     DB_PATH = "./test.db"
     if os.path.exists(DB_PATH):
