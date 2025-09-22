@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "finesql"
-version = "0.1.2"
+version = "0.1.3.1"
 description = "FineSQL is a library for interacting with SQLite database from Python code, with Python objects."
 readme = "README.md"
 requires-python = ">=3.9"
@@ -56,10 +56,10 @@ dev = [
 
 [project.urls]
 Homepage = "https://github.com/goldendevuz/finesql"
-Documentation = "https://github.com/goldendevuz/finesql-docs"
+Documentation = "https://goldendevuz.github.io/finesql-docs"
 Repository = "https://github.com/goldendevuz/finesql"
 Issues = "https://github.com/goldendevuz/finesql/issues"
-Changelog = "https://sqlmodel.tiangolo.com/release-notes/"
+Changelog = "https://sqlmodel.tiangolo.com/release-notes"
 
 [tool.setuptools.packages.find]
 exclude = ["tests", "*.tests", "*.tests.*", "tests.*"]
