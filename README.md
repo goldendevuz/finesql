@@ -1,6 +1,6 @@
 # FineSQL ORM
 
-![Fynor](https://img.shields.io/badge/finesql-0.1.1-red)
+![Finesql](https://img.shields.io/badge/finesql-0.1.1-red)
 ![Purpose](https://img.shields.io/badge/purpose-learning-green.svg)
 ![Python](https://img.shields.io/badge/python-3.9%2B-blue.svg)
 ![License](https://img.shields.io/badge/license-MIT-yellow.svg)
@@ -105,6 +105,51 @@ post = db.get(Post, id=1)
 print(post.author.username)
 ```
 
+## Full Example
+
+Here’s the complete example code in one file:
+
+```python
+from finesql import Database, Table, Column, ForeignKey
+
+# Define models
+class User(Table):
+    username = Column(str)
+    age = Column(int)
+
+class Post(Table):
+    title = Column(str)
+    body = Column(str)
+    author = ForeignKey(User)
+
+# Initialize database
+db = Database("app.db")
+db.create(User)
+db.create(Post)
+
+# Create records
+user = User(username="Alice", age=25)
+db.save(user)
+post = Post(title="Hello World", body="This is my first post", author=user)
+db.save(post)
+
+# Query records
+print("All users:", db.all(User))
+print("User by id:", db.get(User, id=1).username)
+
+# Update
+alice = db.get(User, id=1)
+alice.age = 26
+db.update(alice)
+
+# Relationship
+post = db.get(Post, id=1)
+print("Post author:", post.author.username)
+
+# Delete
+db.delete(User, id=1)
+```
+
 ---
 
 ## API Reference
@@ -144,3 +189,5 @@ print(post.author.username)
 ## License
 
 MIT © 2025 Abdulmajid Yunus
+
+---
