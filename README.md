@@ -1,5 +1,6 @@
 # FineSQL ORM
 
+![Fynor](https://img.shields.io/badge/finesql-0.1.1-red)
 ![Purpose](https://img.shields.io/badge/purpose-learning-green.svg)
 ![Python](https://img.shields.io/badge/python-3.9%2B-blue.svg)
 ![License](https://img.shields.io/badge/license-MIT-yellow.svg)
@@ -14,7 +15,7 @@ It provides simple table definitions, CRUD operations, and foreign key support w
 No external dependencies required — only Python standard library.
 
 ```bash
-git clone https://github.com/yourusername/finesql
+git clone https://github.com/goldendevuz/finesql
 cd finesql
 ```
 
@@ -142,4 +143,4 @@ print(post.author.username)
 
 ## License
 
-MIT © 2025 Your Name
+MIT © 2025 Abdulmajid Yunus
