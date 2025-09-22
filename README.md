@@ -1,25 +1,32 @@
 # FineSQL ORM
 
-![Finesql](https://img.shields.io/badge/finesql-0.1.1-red)
-![Purpose](https://img.shields.io/badge/purpose-learning-green.svg)
-![Python](https://img.shields.io/badge/python-3.9%2B-blue.svg)
-![License](https://img.shields.io/badge/license-MIT-yellow.svg)
+![FineSQL](https://img.shields.io/badge/FineSQL-0.0.1-red?style=for-the-badge)
+![pytest](https://img.shields.io/badge/pytest-8.4.2-blue?style=for-the-badge)
+![icecream](https://img.shields.io/badge/icecream-2.1.8-orange?style=for-the-badge)
+![Purpose](https://img.shields.io/badge/purpose-learning-green?style=for-the-badge)
+![Python](https://img.shields.io/badge/python-3.9%2B-blue?style=for-the-badge)
+![License](https://img.shields.io/badge/license-MIT-yellow?style=for-the-badge)
 
 FineSQL is a lightweight Python ORM built on top of `sqlite3` for educational purposes.  
 It provides simple table definitions, CRUD operations, and foreign key support while keeping the codebase minimal and easy to understand.
 
----
-
 ## Installation
 
-No external dependencies required — only Python standard library.
+<details>
+<summary><b>pip</b></summary>
 
 ```bash
-git clone https://github.com/goldendevuz/finesql
-cd finesql
+pip install finesql
 ```
+</details>
 
----
+<details>
+<summary><b>uv</b></summary>
+
+```bash
+uv add finesql
+```
+</details>
 
 ## Quick Start
 
@@ -50,10 +57,15 @@ db.create(Post)
 ### 3. Create Records
 
 ```python
-user = User(username="Alice", age=25)
-db.save(user)
+# Create users
+alice = User(full_name="Alice Johnson", age=25)
+db.save(alice)
 
-post = Post(title="Hello World", body="This is my first post", author=user)
+robert = User(full_name="Robert Smith", age=30)
+db.save(robert)
+
+# Create a post
+post = Post(title="Hello World", body="This is my first post", author=robert)
 db.save(post)
 ```
 
@@ -62,20 +74,18 @@ db.save(post)
 ```python
 # Get all users
 users = db.all(User)
-for u in users:
-    print(u.id, u.username, u.age)
+print(users)
 
 # Get by id
-alice = db.get(User, id=1)
-print(alice.username)
+user1 = db.get(User, id=1)
+print(user1)
 
-# Filter by field (LIKE search)
-maybe_alice = db.get_by_field(User, field_name="username", value="Alice")
-print(maybe_alice.username)
+# Filter by full_name (reuse first name)
+alice = db.get_by_field(User, field_name="full_name", value="Alice Johnson")
+print(alice)
 
-# Custom select (dict result)
-result = db.get_user(User, field_name="username", value="Alice", return_fields=["id", "age"])
-print(result)  # {'id': 1, 'age': 25}
+robert = db.get_by_field(User, field_name="full_name", value="Robert Smith")
+print(robert)
 ```
 
 ### 5. Update Records
@@ -92,8 +102,6 @@ db.update(alice)
 db.delete(User, id=1)
 ```
 
----
-
 ## Relationships
 
 Foreign keys can be defined using `ForeignKey`.  
@@ -102,55 +110,8 @@ When fetching posts, the related `User` instance will be automatically resolved:
 
 ```python
 post = db.get(Post, id=1)
-print(post.author.username)
+print(post.author)
 ```
-
-## Full Example
-
-Here’s the complete example code in one file:
-
-```python
-from finesql import Database, Table, Column, ForeignKey
-
-# Define models
-class User(Table):
-    username = Column(str)
-    age = Column(int)
-
-class Post(Table):
-    title = Column(str)
-    body = Column(str)
-    author = ForeignKey(User)
-
-# Initialize database
-db = Database("app.db")
-db.create(User)
-db.create(Post)
-
-# Create records
-user = User(username="Alice", age=25)
-db.save(user)
-post = Post(title="Hello World", body="This is my first post", author=user)
-db.save(post)
-
-# Query records
-print("All users:", db.all(User))
-print("User by id:", db.get(User, id=1).username)
-
-# Update
-alice = db.get(User, id=1)
-alice.age = 26
-db.update(alice)
-
-# Relationship
-post = db.get(Post, id=1)
-print("Post author:", post.author.username)
-
-# Delete
-db.delete(User, id=1)
-```
-
----
 
 ## API Reference
 
@@ -160,7 +121,6 @@ db.delete(User, id=1)
 - `all(table)` → Returns all records.
 - `get(table, id)` → Get record by id.
 - `get_by_field(table, field_name, value)` → LIKE search by field.
-- `get_user(table, field_name, value, return_fields)` → Dict select with custom fields.
 - `update(instance)` → Updates a record.
 - `delete(table, id)` → Deletes a record.
 
