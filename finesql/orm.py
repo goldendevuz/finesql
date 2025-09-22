@@ -1,13 +1,5 @@
-import inspect
 import sqlite3
-
-SQL_TYPES = {
-    int: 'INTEGER',
-    float: 'REAL',
-    str: 'TEXT',
-    bytes: 'BLOB',
-    bool: 'INTEGER',  # 0/1
-}
+import inspect
 
 
 class Database:
@@ -16,23 +8,23 @@ class Database:
 
     @property
     def tables(self):
-        SELECT_SQL_TABLES = "SELECT name FROM sqlite_master WHERE type = 'table';"
-        return [row[0] for row in self.conn.execute(SELECT_SQL_TABLES).fetchall()]
+        SELECT_TABLE_SQL = "SELECT name FROM sqlite_master WHERE type = 'table' ;"
+        return [row[0] for row in self.conn.execute(SELECT_TABLE_SQL).fetchall()]
 
     def create(self, table):
         self.conn.execute(table._get_create_sql())
 
     def save(self, instance):
         sql, values = instance._get_insert_sql()
-        cursor = self.conn.execute(sql, values)
+        curser = self.conn.execute(sql, values)
         self.conn.commit()
-        instance._data["id"] = cursor.lastrowid
+        instance._data["id"] = curser.lastrowid
 
     def all(self, table):
-        query, fields = table._get_select_all_sql()
+        sql, fields = table._get_select_all_sql()
 
         result = []
-        for row in self.conn.execute(query).fetchall():
+        for row in self.conn.execute(sql).fetchall():
             instance = table()
             for field, value in zip(fields, row):
                 if field.endswith("_id"):
@@ -40,16 +32,55 @@ class Database:
                     fk = getattr(table, field)
                     value = self.get(fk.table, id=value)
                 setattr(instance, field, value)
+
             result.append(instance)
+
         return result
 
-    def get(self, table, id):
-        query, fields = table._get_select_by_id_sql(id=id)
+    def get_user(self, table, field_name=None, value=None, return_fields=None):
+        if field_name is None and value is None:
+            raise ValueError("Either 'field_name' and 'value' must be provided.")
 
-        row = self.conn.execute(query).fetchone()
+        sql = table._get_select_by_user_sql(field_name=field_name, return_fields=return_fields)
+        params = (value,)
+
+        cursor = self.conn.execute(sql, params)
+        row = cursor.fetchone()
+        columns = [desc[0] for desc in cursor.description]
+
+        return dict(zip(columns, row))
+
+    def get_by_field(self, table, field_name=None, value=None):
+
+        if field_name is not None and value is not None:
+            sql, fields = table._get_select_by_field_sql(field_name=field_name, value=value)
+            params = (f"%{value}%",)
+        else:
+            raise ValueError("Either 'field_name' and 'value' must be provided.")
+
+        row = self.conn.execute(sql, params).fetchone()
 
         if row is None:
-            raise Exception(f"{table.__name__} instance with id {id} does not exist")
+            raise Exception(f"{table.__name__} instance not found")
+
+        instance = table()
+
+        for field, value in zip(fields, row):
+            if field.endswith("_id"):
+                field = field[:-3]
+                fk = getattr(table, field)
+                value = self.get(fk.table, id=value)
+
+            setattr(instance, field, value)
+
+        return instance
+
+    def get(self, table, id):
+        sql, fields = table._get_select_by_id_sql(id=id)
+        row = self.conn.execute(sql).fetchone()
+
+        if row is None:
+            raise Exception(f"{table.__name__} instance with {id} does not exist")
 
         instance = table()
         for field, value in zip(fields, row):
@@ -62,136 +93,171 @@ class Database:
         return instance
 
     def update(self, instance):
-        query, values = instance._get_update_sql()
-        self.conn.execute(query, values)
+        sql, values = instance._get_update_sql()
+        self.conn.execute(sql, values)
         self.conn.commit()
 
     def delete(self, table, id):
-        query = table._get_delete_sql(id=id)
-        self.conn.execute(query)
+        sql = table._get_delete_sql(id)
+        self.conn.execute(sql)
         self.conn.commit()
 
 
 class Table:
     def __init__(self, **kwargs):
-        self._data = {"id": None}
+        self._data = {
+            "id": None
+
+        }
 
         for key, value in kwargs.items():
             self._data[key] = value
 
     @classmethod
     def _get_create_sql(cls):
-        CREATE_SQL_TABLE = "CREATE TABLE IF NOT EXISTS {name} ({fields});"
+        CREATE_TABLE_SQL = "CREATE TABLE IF NOT EXISTS {name} ({fields});"
         fields = [
             "id INTEGER PRIMARY KEY AUTOINCREMENT"
+
         ]
 
         for name, col in inspect.getmembers(cls):
             if isinstance(col, Column):
                 fields.append(f"{name} {col.sql_type}")
+
             elif isinstance(col, ForeignKey):
                 fields.append(f"{name}_id INTEGER")
 
-        fields = ", ".join(fields)
+        fields = ', '.join(fields)
         name = cls.__name__.lower()
 
-        query = CREATE_SQL_TABLE.format(name=name, fields=fields)
-        return query
+        return CREATE_TABLE_SQL.format(name=name, fields=fields)
+
+    def __getattribute__(self, attr_name):
+        _data = super().__getattribute__("_data")
+
+        if attr_name in _data:
+            return _data[attr_name]
+
+        return super().__getattribute__(attr_name)
+
+    # overwrite setattr method
+    def __setattr__(self, name, value):
+        super().__setattr__(name, value)
+        if name in self._data:
+            self._data[name] = value
 
     def _get_insert_sql(self):
-        INSERT_QUERY = "INSERT INTO {name} ({fields}) VALUES ({placeholders});"
+        INSERT_SQL = "INSERT INTO {name} ({fields}) VALUES ({placeholders});"
         cls = self.__class__
         fields = []
         placeholders = []
         values = []
 
         for name, col in inspect.getmembers(cls):
-            def _():
-                placeholders.append("?")
+            value = getattr(self, name)
 
             if isinstance(col, Column):
                 fields.append(name)
-                values.append(getattr(self, name))
-                _()
+                if not isinstance(value, Column):
+                    values.append(value)
+                else:
+                    values.append(None)
+                placeholders.append("?")
             elif isinstance(col, ForeignKey):
                 fields.append(f"{name}_id")
-                values.append(getattr(self, name).id)
-                _()
+                values.append(value.id)
+                placeholders.append("?")
 
         fields = ", ".join(fields)
         placeholders = ", ".join(placeholders)
 
-        sql = INSERT_QUERY.format(name=cls.__name__.lower(), fields=fields, placeholders=placeholders)
+        sql = INSERT_SQL.format(name=cls.__name__.lower(), fields=fields, placeholders=placeholders)
+
         return sql, values
-
-
-    def __getattribute__(self, name):
-        _data = super().__getattribute__("_data")
-
-        if name in _data:
-            return _data[name]
-        return super().__getattribute__(name)
-
-    def __setattr__(self, name, value):
-        super().__setattr__(name, value)
-
-        if name in self._data:
-            self._data[name] = value
 
     @classmethod
     def _get_select_all_sql(cls):
-        SELECT_ALL_QUERY = "SELECT {fields} FROM {name};"
+        SELECT_ALL_SQL = "SELECT {fields} FROM {name};"
 
         fields = ["id"]
+
         for name, col in inspect.getmembers(cls):
             if isinstance(col, Column):
                 fields.append(name)
             elif isinstance(col, ForeignKey):
                 fields.append(f"{name}_id")
+        sql = SELECT_ALL_SQL.format(name=cls.__name__.lower(), fields=", ".join(fields))
 
-        query = SELECT_ALL_QUERY.format(fields=", ".join(fields), name=cls.__name__.lower())
-        return query, fields
+        return sql, fields
 
     @classmethod
     def _get_select_by_id_sql(cls, id):
-        SELECT_ALL_QUERY = "SELECT {fields} FROM {name} WHERE id={id};"
-
+        SELECT_GET_SQL = "SELECT {fields} FROM {name} WHERE id = {id};"
         fields = ["id"]
+
         for name, col in inspect.getmembers(cls):
             if isinstance(col, Column):
                 fields.append(name)
             elif isinstance(col, ForeignKey):
                 fields.append(f"{name}_id")
 
-        query = SELECT_ALL_QUERY.format(fields=", ".join(fields), name=cls.__name__.lower(), id=id)
-        return query, fields
+        sql = SELECT_GET_SQL.format(name=cls.__name__.lower(), fields=", ".join(fields), id=id)
+
+        return sql, fields
+
+    @classmethod
+    def _get_select_by_field_sql(cls, field_name, value):
+        SELECT_GET_SQL_BY_FIELD = "SELECT {fields} FROM {name} WHERE {field_name} LIKE ?;"
+
+        fields = ["id"]
+
+        for name, col in inspect.getmembers(cls):
+            if isinstance(col, Column):
+                fields.append(name)
+            elif isinstance(col, ForeignKey):
+                fields.append(f"{name}_id")
+
+        sql = SELECT_GET_SQL_BY_FIELD.format(name=cls.__name__.lower(), fields=", ".join(fields), field_name=field_name)
+
+        return sql, fields
+
+    @classmethod
+    def _get_select_by_user_sql(cls, field_name, return_fields=None):
+        if return_fields is None:
+            fields_str = "*"
+        else:
+            fields_str = ", ".join(return_fields)
+
+        query = f"SELECT {fields_str} FROM {cls.__name__.lower()} WHERE {field_name} = ?"
+        return query
 
     def _get_update_sql(self):
-        UPDATE_QUERY = "UPDATE {name} SET {fields} WHERE id={id};"
-        cls = self.__class__
         fields = []
         values = []
 
-        for name, col in inspect.getmembers(cls):
+        for name, col in inspect.getmembers(self.__class__):
             if isinstance(col, Column):
                 fields.append(name)
                 values.append(getattr(self, name))
             elif isinstance(col, ForeignKey):
+                fk = getattr(self, name)
                 fields.append(f"{name}_id")
-                values.append(getattr(self, name).id)
+                values.append(fk.id if fk else None)
 
-        query = UPDATE_QUERY.format(
-            name=cls.__name__.lower(), 
-            fields=", ".join([f"{field} = ?" for field in fields]),
-            id=self.id
-        )
-        return query, values
+        sql = f"UPDATE {self.__class__.__name__.lower()} SET {', '.join([f'{field} = ?' for field in fields])} WHERE id = ?;"
+        values.append(self.id)
+
+        return sql, values
 
     @classmethod
     def _get_delete_sql(cls, id):
-        DELETE_QUERY = "DELETE FROM {name} WHERE id={id};"
-        query = DELETE_QUERY.format(name=cls.__name__.lower(), id=id)
-        return query
+        DELETE_SQL = "DELETE FROM {name} WHERE id = {id};"
+
+        sql = DELETE_SQL.format(name=cls.__name__.lower(), id=id)
+
+        return sql
+
 
 class Column:
     def __init__(self, column_type):
@@ -199,7 +265,15 @@ class Column:
 
     @property
     def sql_type(self):
-        return SQL_TYPES[self.type]
+        SQLITE_TYPE_MAP = {
+            int: "INTEGER",
+            str: "TEXT",
+            bool: "INTEGER",  # 0 OR 1
+            float: "REAL",
+            bytes: "BLOB"
+
+        }
+        return SQLITE_TYPE_MAP[self.type]
 
 
 class ForeignKey:
