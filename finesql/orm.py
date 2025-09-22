@@ -34,6 +34,7 @@ class Database:
                 setattr(instance, field, value)
 
             result.append(instance)
+            instance._repr_mode = "all"   # 👈 mark for repr
 
         return result
 
@@ -89,6 +90,7 @@ class Database:
                 fk = getattr(table, field)
                 value = self.get(fk.table, id=value)
             setattr(instance, field, value)
+        instance._repr_mode = "get"   # 👈 mark for repr
 
         return instance
 
@@ -105,11 +107,19 @@ class Database:
 
 class Table:
     def __init__(self, **kwargs):
-        self._data = {
-            "id": None
+        self._data = {}
 
-        }
+        # always include id
+        self._data["id"] = None
 
+        # include all Column and ForeignKey fields
+        for name, col in inspect.getmembers(self.__class__):
+            if isinstance(col, Column):
+                self._data[name] = None
+            elif isinstance(col, ForeignKey):
+                self._data[name] = None
+
+        # apply user-provided values
         for key, value in kwargs.items():
             self._data[key] = value
 
@@ -259,12 +269,32 @@ class Table:
         return sql
 
     def __repr__(self):
-        attrs = ", ".join(
-            f"{field}={repr(value)}"
-            for field, value in self.__dict__.items()
-            if field != "_data"
-        )
-        return f"{self.__class__.__name__}({attrs})"
+        mode = getattr(self, "_repr_mode", "default")
+
+        if mode == "all":
+            attrs = ", ".join(f"{k}={v!r}" for k, v in self._data.items())
+            return f"{self.__class__.__name__}({attrs})"
+
+        elif mode == "get":
+            items = list(self._data.items())
+            if not items:
+                return ""
+
+            out = []
+            for i, (k, v) in enumerate(items):
+                if i == 0:
+                    out.append(f"{k}={v!r}")          # first → no comma
+                elif i == 1:
+                    out.append(f", {k}={v!r}")        # second → with comma
+                else:
+                    out.append(f" {k}={v!r}")         # rest → space separated
+
+            return "".join(out)
+
+        else:
+            return f"<{self.__class__.__name__} instance>"
+
+    __str__ = __repr__
 
 
 class Column:
