@@ -258,6 +258,14 @@ class Table:
 
         return sql
 
+    def __repr__(self):
+        attrs = ", ".join(
+            f"{field}={repr(value)}"
+            for field, value in self.__dict__.items()
+            if field != "_data"
+        )
+        return f"{self.__class__.__name__}({attrs})"
+
 
 class Column:
     def __init__(self, column_type):
