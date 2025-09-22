@@ -7,10 +7,8 @@ from finesql.orm import Database
 
 
 def save_obj(db, Table, **kwargs):
-    ic(db, Table, kwargs)
     obj = Table(**kwargs)
     db.save(obj)
-    ic(obj)
 
     return obj
 
