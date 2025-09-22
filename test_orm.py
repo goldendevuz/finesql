@@ -1,9 +1,6 @@
-import os
 import sqlite3
 
 import pytest
-from icecream import ic
-from finesql.orm import Database
 
 
 def save_obj(db, Table, **kwargs):
@@ -39,6 +36,7 @@ def test_table_creation(db, Author, Book):
     for table in ("author", "book"):
         assert table in db.tables
 
+
 def test_table_instance_creation(db, Author):
     db.create(Author)
 
@@ -49,6 +47,7 @@ def test_table_instance_creation(db, Author):
     assert john.name == name
     assert john.age == age
     assert john.id is None
+
 
 def test_save_save_table_instance(db, Author):
     db.create(Author)
@@ -67,6 +66,7 @@ def test_save_save_table_instance(db, Author):
     jack = Author(name='Jack Ma', age=55)
     db.save(jack)
     assert jack.id == 2
+
 
 def test_query_all_authors(db, Author):
     db.create(Author)
@@ -91,6 +91,7 @@ def test_query_all_authors(db, Author):
     jack = Author(name='Jack Ma', age=55)
     db.save(jack)
 
+
 def test_gdt_author(db, Author):
     db.create(Author)
 
@@ -106,6 +107,7 @@ def test_gdt_author(db, Author):
     assert john.id == 1
     assert john.age == 44
     assert john.name == "John Doe"
+
 
 def test_get_book(db, Author, Book):
     db.create(Author)
@@ -166,14 +168,15 @@ def test_delete_author(db, Author):
     with pytest.raises(Exception):
         db.get(Author, id=1)
 
-def test_get_all_heroes(db, Hero):
-    db.create(Hero)
 
-    hero_1 = save_obj(db, Hero, name="Deadpond", secret_name="Dive Wilson")
-    hero_2 = save_obj(db, Hero, name="Spider-Boy", secret_name="Pedro Parqueador")
-    hero_3 = save_obj(db, Hero, name="Rusty-Man", secret_name="Tommy Sharp", age=48)
+def test_get_all_heroes(db, hero_v1):
+    db.create(hero_v1)
 
-    heroes = db.all(Hero)
+    hero_1 = save_obj(db, hero_v1, name="Deadpond", secret_name="Dive Wilson")
+    hero_2 = save_obj(db, hero_v1, name="Spider-Boy", secret_name="Pedro Parqueador")
+    hero_3 = save_obj(db, hero_v1, name="Rusty-Man", secret_name="Tommy Sharp", age=48)
+
+    heroes = db.all(hero_v1)
 
     assert len(heroes) == 3
     assert heroes[0].secret_name == "Dive Wilson"
@@ -181,19 +184,36 @@ def test_get_all_heroes(db, Hero):
     assert heroes[2].name == "Rusty-Man"
     assert heroes[2].age == 48
 
-    assert repr(heroes) == str(heroes) == "[Hero(id=1, age=None, name='Deadpond', secret_name='Dive Wilson'), Hero(id=2, age=None, name='Spider-Boy', secret_name='Pedro Parqueador'), Hero(id=3, age=48, name='Rusty-Man', secret_name='Tommy Sharp')]"
+    assert repr(heroes) == str(
+        heroes) == "[Hero(id=1, age=None, name='Deadpond', secret_name='Dive Wilson'), Hero(id=2, age=None, name='Spider-Boy', secret_name='Pedro Parqueador'), Hero(id=3, age=48, name='Rusty-Man', secret_name='Tommy Sharp')]"
 
-def test_get_hero(db, Hero):
-    db.create(Hero)
 
-    hero_1 = save_obj(db, Hero, name="Deadpond", secret_name="Dive Wilson")
-    hero_2 = save_obj(db, Hero, name="Spider-Boy", secret_name="Pedro Parqueador")
-    hero_3 = save_obj(db, Hero, name="Rusty-Man", secret_name="Tommy Sharp", age=48)
+def test_get_hero(db, hero_v1):
+    db.create(hero_v1)
 
-    hero = db.get(Hero, id=2)
+    hero_1 = save_obj(db, hero_v1, name="Deadpond", secret_name="Dive Wilson")
+    hero_2 = save_obj(db, hero_v1, name="Spider-Boy", secret_name="Pedro Parqueador")
+    hero_3 = save_obj(db, hero_v1, name="Rusty-Man", secret_name="Tommy Sharp", age=48)
+
+    hero = db.get(hero_v1, id=2)
 
     assert hero.age is None
     assert hero.id == 2
     assert hero.name == "Spider-Boy"
     assert hero.secret_name == "Pedro Parqueador"
     assert repr(hero) == str(hero) == "id=2, age=None name='Spider-Boy' secret_name='Pedro Parqueador'"
+
+
+def test_model_field_option_default(db, hero_v2):
+    db.create(hero_v2)
+
+    hero_1 = save_obj(db, hero_v2, name="Deadpond", secret_name="Dive Wilson")
+    hero_2 = save_obj(db, hero_v2, name="Spider-Boy", secret_name="Pedro Parqueador", age=None)
+    hero_3 = save_obj(db, hero_v2, name="Rusty-Man", secret_name="Tommy Sharp", age=48)
+
+    heroes = db.all(hero_v2)
+
+    assert len(heroes) == 3
+    assert heroes[0].age == 20
+    assert heroes[1].age is None
+    assert heroes[2].age == 48

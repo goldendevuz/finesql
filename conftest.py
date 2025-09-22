@@ -25,11 +25,25 @@ def Book(Author):
 
 
 @pytest.fixture
-def Hero():
+def hero_v1():
+    """Returns a Hero class without default age."""
+
     class Hero(Table):
         name = Column(str)
         secret_name = Column(str)
         age = Column(int)
+
+    return Hero
+
+
+@pytest.fixture
+def hero_v2():
+    """Returns a Hero class with default age."""
+
+    class Hero(Table):
+        name = Column(str)
+        secret_name = Column(str)
+        age = Column(int, default=20)
 
     return Hero
 

@@ -6,7 +6,8 @@
 ![License](https://img.shields.io/badge/license-MIT-yellow.svg)
 
 FineSQL is a lightweight Python ORM built on top of `sqlite3` for educational purposes.  
-It provides simple table definitions, CRUD operations, and foreign key support while keeping the codebase minimal and easy to understand.
+It provides simple table definitions, CRUD operations, and foreign key support while keeping the codebase minimal and
+easy to understand.
 
 ---
 
@@ -28,9 +29,11 @@ cd finesql
 ```python
 from finesql import Database, Table, Column, ForeignKey
 
+
 class User(Table):
     username = Column(str)
     age = Column(int)
+
 
 class Post(Table):
     title = Column(str)
@@ -112,15 +115,18 @@ Here’s the complete example code in one file:
 ```python
 from finesql import Database, Table, Column, ForeignKey
 
+
 # Define models
 class User(Table):
     username = Column(str)
     age = Column(int)
 
+
 class Post(Table):
     title = Column(str)
     body = Column(str)
     author = ForeignKey(User)
+
 
 # Initialize database
 db = Database("app.db")
@@ -155,6 +161,7 @@ db.delete(User, id=1)
 ## API Reference
 
 ### `Database`
+
 - `create(table)` → Creates a table.
 - `save(instance)` → Inserts a record.
 - `all(table)` → Returns all records.
@@ -165,14 +172,17 @@ db.delete(User, id=1)
 - `delete(table, id)` → Deletes a record.
 
 ### `Table`
+
 - Base class for all models.
 - Automatically provides `id` field.
 - Column and ForeignKey definitions supported.
 
 ### `Column`
+
 - Define a typed column (`int`, `str`, `float`, `bool`, `bytes`).
 
 ### `ForeignKey`
+
 - Define foreign key to another table.
 
 ---

@@ -1,5 +1,5 @@
-import sqlite3
 import inspect
+import sqlite3
 
 
 class Database:
@@ -15,16 +15,16 @@ class Database:
         self.conn.execute(table._get_create_sql())
 
     def save(self, instance):
-        sql, values = instance._get_insert_sql()
-        curser = self.conn.execute(sql, values)
+        query, values = instance._get_insert_sql()
+        curser = self.conn.execute(query, values)
         self.conn.commit()
         instance._data["id"] = curser.lastrowid
 
     def all(self, table):
-        sql, fields = table._get_select_all_sql()
+        query, fields = table._get_select_all_sql()
 
         result = []
-        for row in self.conn.execute(sql).fetchall():
+        for row in self.conn.execute(query).fetchall():
             instance = table()
             for field, value in zip(fields, row):
                 if field.endswith("_id"):
@@ -34,7 +34,7 @@ class Database:
                 setattr(instance, field, value)
 
             result.append(instance)
-            instance._repr_mode = "all"   # 👈 mark for repr
+            instance._repr_mode = "all"  # 👈 mark for repr
 
         return result
 
@@ -42,10 +42,10 @@ class Database:
         if field_name is None and value is None:
             raise ValueError("Either 'field_name' and 'value' must be provided.")
 
-        sql = table._get_select_by_user_sql(field_name=field_name, return_fields=return_fields)
+        query = table._get_select_by_user_sql(field_name=field_name, return_fields=return_fields)
         params = (value,)
 
-        cursor = self.conn.execute(sql, params)
+        cursor = self.conn.execute(query, params)
         row = cursor.fetchone()
         columns = [desc[0] for desc in cursor.description]
 
@@ -54,12 +54,12 @@ class Database:
     def get_by_field(self, table, field_name=None, value=None):
 
         if field_name is not None and value is not None:
-            sql, fields = table._get_select_by_field_sql(field_name=field_name, value=value)
+            query, fields = table._get_select_by_field_sql(field_name=field_name, value=value)
             params = (f"%{value}%",)
         else:
             raise ValueError("Either 'field_name' and 'value' must be provided.")
 
-        row = self.conn.execute(sql, params).fetchone()
+        row = self.conn.execute(query, params).fetchone()
 
         if row is None:
             raise Exception(f"{table.__name__} instance not found")
@@ -77,8 +77,8 @@ class Database:
         return instance
 
     def get(self, table, id):
-        sql, fields = table._get_select_by_id_sql(id=id)
-        row = self.conn.execute(sql).fetchone()
+        query, fields = table._get_select_by_id_sql(id=id)
+        row = self.conn.execute(query).fetchone()
 
         if row is None:
             raise Exception(f"{table.__name__} instance with {id} does not exist")
@@ -90,32 +90,31 @@ class Database:
                 fk = getattr(table, field)
                 value = self.get(fk.table, id=value)
             setattr(instance, field, value)
-        instance._repr_mode = "get"   # 👈 mark for repr
+        instance._repr_mode = "get"  # 👈 mark for repr
 
         return instance
 
     def update(self, instance):
-        sql, values = instance._get_update_sql()
-        self.conn.execute(sql, values)
+        query, values = instance._get_update_sql()
+        self.conn.execute(query, values)
         self.conn.commit()
 
     def delete(self, table, id):
-        sql = table._get_delete_sql(id)
-        self.conn.execute(sql)
+        query = table._get_delete_sql(id)
+        self.conn.execute(query)
         self.conn.commit()
 
 
 class Table:
     def __init__(self, **kwargs):
-        self._data = {}
+        self._data = {"id": None}
 
         # always include id
-        self._data["id"] = None
 
         # include all Column and ForeignKey fields
         for name, col in inspect.getmembers(self.__class__):
             if isinstance(col, Column):
-                self._data[name] = None
+                self._data[name] = col.value
             elif isinstance(col, ForeignKey):
                 self._data[name] = None
 
@@ -182,9 +181,9 @@ class Table:
         fields = ", ".join(fields)
         placeholders = ", ".join(placeholders)
 
-        sql = INSERT_SQL.format(name=cls.__name__.lower(), fields=fields, placeholders=placeholders)
+        query = INSERT_SQL.format(name=cls.__name__.lower(), fields=fields, placeholders=placeholders)
 
-        return sql, values
+        return query, values
 
     @classmethod
     def _get_select_all_sql(cls):
@@ -197,9 +196,9 @@ class Table:
                 fields.append(name)
             elif isinstance(col, ForeignKey):
                 fields.append(f"{name}_id")
-        sql = SELECT_ALL_SQL.format(name=cls.__name__.lower(), fields=", ".join(fields))
+        query = SELECT_ALL_SQL.format(name=cls.__name__.lower(), fields=", ".join(fields))
 
-        return sql, fields
+        return query, fields
 
     @classmethod
     def _get_select_by_id_sql(cls, id):
@@ -212,9 +211,9 @@ class Table:
             elif isinstance(col, ForeignKey):
                 fields.append(f"{name}_id")
 
-        sql = SELECT_GET_SQL.format(name=cls.__name__.lower(), fields=", ".join(fields), id=id)
+        query = SELECT_GET_SQL.format(name=cls.__name__.lower(), fields=", ".join(fields), id=id)
 
-        return sql, fields
+        return query, fields
 
     @classmethod
     def _get_select_by_field_sql(cls, field_name, value):
@@ -228,9 +227,10 @@ class Table:
             elif isinstance(col, ForeignKey):
                 fields.append(f"{name}_id")
 
-        sql = SELECT_GET_SQL_BY_FIELD.format(name=cls.__name__.lower(), fields=", ".join(fields), field_name=field_name)
+        query = SELECT_GET_SQL_BY_FIELD.format(name=cls.__name__.lower(), fields=", ".join(fields),
+                                               field_name=field_name)
 
-        return sql, fields
+        return query, fields
 
     @classmethod
     def _get_select_by_user_sql(cls, field_name, return_fields=None):
@@ -255,18 +255,18 @@ class Table:
                 fields.append(f"{name}_id")
                 values.append(fk.id if fk else None)
 
-        sql = f"UPDATE {self.__class__.__name__.lower()} SET {', '.join([f'{field} = ?' for field in fields])} WHERE id = ?;"
+        query = f"UPDATE {self.__class__.__name__.lower()} SET {', '.join([f'{field} = ?' for field in fields])} WHERE id = ?;"
         values.append(self.id)
 
-        return sql, values
+        return query, values
 
     @classmethod
     def _get_delete_sql(cls, id):
         DELETE_SQL = "DELETE FROM {name} WHERE id = {id};"
 
-        sql = DELETE_SQL.format(name=cls.__name__.lower(), id=id)
+        query = DELETE_SQL.format(name=cls.__name__.lower(), id=id)
 
-        return sql
+        return query
 
     def __repr__(self):
         mode = getattr(self, "_repr_mode", "default")
@@ -283,11 +283,11 @@ class Table:
             out = []
             for i, (k, v) in enumerate(items):
                 if i == 0:
-                    out.append(f"{k}={v!r}")          # first → no comma
+                    out.append(f"{k}={v!r}")  # first → no comma
                 elif i == 1:
-                    out.append(f", {k}={v!r}")        # second → with comma
+                    out.append(f", {k}={v!r}")  # second → with comma
                 else:
-                    out.append(f" {k}={v!r}")         # rest → space separated
+                    out.append(f" {k}={v!r}")  # rest → space separated
 
             return "".join(out)
 
@@ -298,8 +298,9 @@ class Table:
 
 
 class Column:
-    def __init__(self, column_type):
+    def __init__(self, column_type, default=None):
         self.type = column_type
+        self.value = default
 
     @property
     def sql_type(self):
