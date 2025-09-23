@@ -1,9 +1,9 @@
 # FineSQL ORM
 
-![Finesql](https://img.shields.io/badge/finesql-0.1.1-red)
-![Purpose](https://img.shields.io/badge/purpose-learning-green.svg)
+![Finesql](https://img.shields.io/badge/finesql-0.0.2-blue)
+![Purpose](https://img.shields.io/badge/purpose-learning-blue.svg)
 ![Python](https://img.shields.io/badge/python-3.9%2B-blue.svg)
-![License](https://img.shields.io/badge/license-MIT-yellow.svg)
+![License](https://img.shields.io/badge/license-MIT-blue.svg)
 [![PyPI Downloads](https://static.pepy.tech/personalized-badge/finesql?period=total&units=NONE&left_color=GREY&right_color=BLUE&left_text=total)](https://pepy.tech/projects/finesql)
 
 FineSQL is a lightweight Python ORM built on top of `sqlite3` for educational purposes.  
