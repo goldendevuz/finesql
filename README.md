@@ -4,20 +4,17 @@
 ![Purpose](https://img.shields.io/badge/purpose-learning-green.svg)
 ![Python](https://img.shields.io/badge/python-3.9%2B-blue.svg)
 ![License](https://img.shields.io/badge/license-MIT-yellow.svg)
+[![PyPI Downloads](https://static.pepy.tech/personalized-badge/finesql?period=total&units=NONE&left_color=GREY&right_color=BLUE&left_text=total)](https://pepy.tech/projects/finesql)
 
 FineSQL is a lightweight Python ORM built on top of `sqlite3` for educational purposes.  
 It provides simple table definitions, CRUD operations, and foreign key support while keeping the codebase minimal and
 easy to understand.
-
----
 
 ## Installation
 
 ```bash
 pip install finesql
 ```
-
----
 
 ## Quick Start
 
@@ -92,8 +89,6 @@ db.update(alice)
 db.delete(User, id=1)
 ```
 
----
-
 ## Relationships
 
 Foreign keys can be defined using `ForeignKey`.  
@@ -153,8 +148,6 @@ print("Post author:", post.author.username)
 db.delete(User, id=1)
 ```
 
----
-
 ## API Reference
 
 ### `Database`
@@ -182,8 +175,6 @@ db.delete(User, id=1)
 
 - Define foreign key to another table.
 
----
-
 ## Roadmap
 
 - [ ] Migrations
@@ -191,10 +182,6 @@ db.delete(User, id=1)
 - [ ] Async support
 - [ ] Type checking with `mypy`
 
----
-
 ## License
 
 MIT © 2025 Abdulmajid Yunus
-
----
