@@ -13,11 +13,8 @@ easy to understand.
 
 ## Installation
 
-No external dependencies required — only Python standard library.
-
 ```bash
-git clone https://github.com/goldendevuz/finesql
-cd finesql
+pip install finesql
 ```
 
 ---
