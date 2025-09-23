@@ -10,11 +10,10 @@ readme = "README.md"
 requires-python = ">=3.9"
 license = { text = "MIT" }
 authors = [
-    { name = "Abdelmajid Yunus", email = "goldendevuz@gmail.com" },
+    { name = "Abdulmajid Yunus", email = "goldendevuz@gmail.com" },
 ]
 classifiers = [
     "Development Status :: 3 - Alpha",
-    "Framework :: AsyncIO",
     "Intended Audience :: Developers",
     "License :: OSI Approved :: MIT License",
     "Programming Language :: Python :: 3 :: Only",
@@ -63,3 +62,11 @@ Changelog = "https://sqlmodel.tiangolo.com/release-notes"
 
 [tool.setuptools.packages.find]
 exclude = ["tests", "*.tests", "*.tests.*", "tests.*"]
+
+[tool.pytest.ini_options]
+minversion = "6.0"
+addopts = "-ra -q"
+testpaths = ["tests"]
+python_files = ["test_*.py"]
+python_classes = ["Test*"]
+python_functions = ["test_*"]

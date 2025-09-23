@@ -1,6 +1,8 @@
 import inspect
 import sqlite3
 
+from icecream import ic
+
 
 class Database:
     def __init__(self, path):
