@@ -1,0 +1,44 @@
+<component name="InspectionProjectProfileManager">
+  <profile version="1.0">
+    <option name="myName" value="Project Default" />
+    <inspection_tool class="PyPackageRequirementsInspection" enabled="true" level="WARNING" enabled_by_default="true">
+      <option name="ignoredPackages">
+        <list>
+          <option value="Django" />
+          <option value="djangorestframework" />
+          <option value="django-filter" />
+          <option value="psycopg2-binary" />
+          <option value="python-decouple" />
+          <option value="pillow" />
+          <option value="djangorestframework-simplejwt" />
+          <option value="django-ratelimit" />
+          <option value="cryptography" />
+          <option value="drf-spectacular" />
+          <option value="drf-standardized-errors" />
+          <option value="django-schema-viewer" />
+          <option value="djangorestframework-jsonapi" />
+          <option value="django-parler" />
+          <option value="django-parler-rest" />
+          <option value="django-modeltranslation" />
+          <option value="django-rosetta" />
+          <option value="adrf" />
+          <option value="celery" />
+          <option value="flower" />
+          <option value="django-celery-beat" />
+          <option value="django-celery-results" />
+          <option value="django-import-export" />
+          <option value="django-debug-toolbar" />
+          <option value="django-daisy" />
+          <option value="django-redis" />
+          <option value="redis" />
+          <option value="Faker" />
+          <option value="icecream" />
+          <option value="uvicorn" />
+          <option value="gunicorn" />
+          <option value="whitenoise" />
+          <option value="django-cors-headers" />
+        </list>
+      </option>
+    </inspection_tool>
+  </profile>
+</component>

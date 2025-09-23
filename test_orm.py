@@ -1,9 +1,14 @@
 import os
+import glob
 import sqlite3
 
 import pytest
 from icecream import ic
-from finesql.orm import Database
+
+for file in glob.glob("storages/*"):
+    if os.path.isfile(file):
+        os.remove(file)
+
 
 
 def save_obj(db, Table, **kwargs):
@@ -197,3 +202,93 @@ def test_get_hero(db, Hero):
     assert hero.name == "Spider-Boy"
     assert hero.secret_name == "Pedro Parqueador"
     assert repr(hero) == str(hero) == "id=2, age=None name='Spider-Boy' secret_name='Pedro Parqueador'"
+
+
+def test_full_example():
+    from finesql import Database, Table, Column, ForeignKey
+
+    # Define models
+    class User(Table):
+        username = Column(str)
+        age = Column(int)
+
+    class Post(Table):
+        title = Column(str)
+        body = Column(str)
+        author = ForeignKey(User)
+
+    # Initialize database
+    db = Database("storages/post.db")
+    db.create(User)
+    db.create(Post)
+
+    # Create records
+    user = User(username="Alice", age=25)
+    db.save(user)
+    post = Post(title="Hello World", body="This is my first post", author=user)
+    db.save(post)
+
+    # Query records
+    print("All users:", db.all(User))
+    print("User by id:", db.get(User, id=1).username)
+
+    # Update
+    alice = db.get(User, id=1)
+    alice.age = 26
+    db.update(alice)
+
+    # Relationship
+    post = db.get(Post, id=1)
+    print("Post author:", post.author.username)
+
+    # Delete
+    db.delete(User, id=1)
+
+
+def test_blog_system():
+    from finesql import Database, Table, Column, ForeignKey
+
+    class User(Table):
+        username = Column(str)
+        email = Column(str)
+
+    class Post(Table):
+        title = Column(str)
+        content = Column(str)
+        author = ForeignKey(User)
+
+    db = Database("storages/blog.db")
+    db.create(User)
+    db.create(Post)
+
+    # Create user
+    user = User(username="alice", email="alice@blog.com")
+    db.save(user)
+
+    # Create post
+    post = Post(title="My First Post", content="Hello world!", author=user)
+    db.save(post)
+
+    # Query with relationships
+    post = db.get(Post, id=1)
+    print(f"'{post.title}' by {post.author.username}")
+
+
+def test_todo_app():
+    from finesql import Database, Table, Column
+
+    class Todo(Table):
+        title = Column(str)
+        completed = Column(bool)
+        priority = Column(int)
+
+    db = Database("storages/todo.db")
+    db.create(Todo)
+
+    todo = Todo(title="Learn FineSQL", completed=False, priority=1)
+    db.save(todo)
+
+    # Mark as completed
+    todo.completed = True
+    todo = db.update(todo)
+    print(todo)
